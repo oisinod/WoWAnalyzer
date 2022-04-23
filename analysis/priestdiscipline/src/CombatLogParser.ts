@@ -36,6 +36,7 @@ import ShatteredPerceptions from './modules/shadowlands/conduits/ShatteredPercep
 import ShiningRadiance from './modules/shadowlands/conduits/ShiningRadiance';
 import Mindgames from './modules/shadowlands/covenant/Mindgames';
 import ClarityOfMind from './modules/shadowlands/legendaries/ClarityOfMind';
+import ClarityOfMindEvang from './modules/shadowlands/legendaries/ClarityOfMindEvang';
 import ThePenitentOne from './modules/shadowlands/legendaries/ThePenitentOne';
 import Atonement from './modules/spells/Atonement';
 import Castigation from './modules/spells/Castigation';
@@ -115,6 +116,7 @@ class CombatLogParser extends CoreCombatLogParser {
     twinsOfTheSunPriestess: TwinsOfTheSunPriestess,
     thePenitentOne: ThePenitentOne,
     clarityOfMind: ClarityOfMind,
+    ClarityOfMindEvang: ClarityOfMindEvang,
   };
 }
 
