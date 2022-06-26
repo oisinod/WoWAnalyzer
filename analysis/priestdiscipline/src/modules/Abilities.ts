@@ -129,7 +129,7 @@ class Abilities extends CoreAbilities {
         },
         enabled: !combatant.hasTalent(SPELLS.SPIRIT_SHELL_TALENT.id),
         castEfficiency: {
-          suggestion: true,
+          suggestion: false,
         },
       },
       {
