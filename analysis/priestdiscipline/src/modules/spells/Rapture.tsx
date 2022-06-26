@@ -43,7 +43,7 @@ class Rapture extends Analyzer {
 
   raptureRemoved() {
     if (this.raptureShields < 7) {
-      this.rapturesUnderThreshold += 3;
+      this.rapturesUnderThreshold += 1;
     }
     this.raptureShields = 0;
 

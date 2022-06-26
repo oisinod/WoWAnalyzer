@@ -1,10 +1,12 @@
+import { t } from '@lingui/macro';
 import { formatNumber, formatPercentage } from 'common/format';
 import SPELLS from 'common/SPELLS';
-import { SpellIcon } from 'interface';
+import { SpellIcon, SpellLink } from 'interface';
 import { TooltipElement } from 'interface';
 import Analyzer, { SELECTED_PLAYER } from 'parser/core/Analyzer';
 import Events, { CastEvent, HealEvent } from 'parser/core/Events';
 import { Options } from 'parser/core/Module';
+import { ThresholdStyle, When } from 'parser/core/ParseResults';
 import StatisticBox from 'parser/ui/StatisticBox';
 
 import isAtonement from '../core/isAtonement';
@@ -19,6 +21,8 @@ class Evangelism extends Analyzer {
   };
   _previousEvangelismCast: CastEvent | null = null;
   protected atonementModule!: Atonement;
+
+  badEvangCount = 0;
 
   constructor(options: Options) {
     super(options);
@@ -47,6 +51,9 @@ class Evangelism extends Analyzer {
   onCast(event: CastEvent) {
     this._previousEvangelismCast = event;
     const atonedPlayers = this.atonementModule.numAtonementsActive;
+    if (atonedPlayers < 18) {
+      this.badEvangCount += 1;
+    }
 
     this._evangelismStatistics[event.timestamp] = {
       count: atonedPlayers,
@@ -75,6 +82,38 @@ class Evangelism extends Analyzer {
           event.amount + (event.absorbed || 0);
       }
     }
+  }
+
+  get suggestionThresholds() {
+    return {
+      actual: this.badEvangCount,
+      isGreaterThan: {
+        average: 0,
+        major: 1,
+      },
+      style: ThresholdStyle.NUMBER,
+    };
+  }
+
+  suggestions(when: When) {
+    when(this.suggestionThresholds).addSuggestion((suggest, actual, recommended) =>
+      suggest(
+        <>
+          {' '}
+          Make sure when preparing a ramp with <SpellLink id={SPELLS.EVANGELISM_TALENT.id} /> that
+          you apply <SpellLink id={SPELLS.ATONEMENT_BUFF.id} /> at least 18 times, 8 using either{' '}
+          <SpellLink id={SPELLS.POWER_WORD_SHIELD.id} /> or <SpellLink id={SPELLS.SHADOW_MEND.id} />{' '}
+          and 10 using both charges of <SpellLink id={SPELLS.POWER_WORD_RADIANCE.id} />.
+        </>,
+      )
+        .icon(SPELLS.EVANGELISM_TALENT.icon)
+        .actual(
+          t({
+            message: `${actual} casts with less than 18 atonements`,
+          }),
+        )
+        .recommended(`${recommended} is recommended`),
+    );
   }
 
   statistic() {

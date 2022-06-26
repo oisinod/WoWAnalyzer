@@ -55,9 +55,6 @@ class Abilities extends CoreAbilities {
           base: 1500,
         },
         enabled: combatant.hasTalent(SPELLS.SCHISM_TALENT.id),
-        castEfficiency: {
-          suggestion: true,
-        },
       },
       {
         spell: SPELLS.POWER_WORD_SOLACE_TALENT.id,

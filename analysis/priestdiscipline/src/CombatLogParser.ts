@@ -52,6 +52,7 @@ import Evangelism from './modules/spells/Evangelism';
 import Grace from './modules/spells/Grace';
 import Lenience from './modules/spells/Lenience';
 import Penance from './modules/spells/Penance';
+import PowerWordRadiance from './modules/spells/PowerWordRadiance';
 import Rapture from './modules/spells/Rapture';
 import Schism from './modules/spells/Schism';
 import SinsOfTheMany from './modules/spells/SinsOfTheMany';
@@ -98,6 +99,7 @@ class CombatLogParser extends CoreCombatLogParser {
     lenience: Lenience,
     rapture: Rapture,
     purgeTheWicked: PurgeTheWicked,
+    powerWordRadiance: PowerWordRadiance,
     atonementApplicatorBreakdown: AtonementApplicatorBreakdown,
     solaceVsShieldDiscipline: SolaceVsShieldDiscipline,
 

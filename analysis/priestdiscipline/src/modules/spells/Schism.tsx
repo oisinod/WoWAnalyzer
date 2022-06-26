@@ -1,11 +1,13 @@
+import { t } from '@lingui/macro';
 import { formatNumber, formatPercentage } from 'common/format';
 import SPELLS from 'common/SPELLS';
 import { SpellIcon, SpellLink } from 'interface';
 import Analyzer, { SELECTED_PLAYER } from 'parser/core/Analyzer';
 import { calculateEffectiveDamage } from 'parser/core/EventCalculateLib';
 import { calculateEffectiveHealing } from 'parser/core/EventCalculateLib';
-import Events, { DamageEvent } from 'parser/core/Events';
+import Events, { DamageEvent, CastEvent } from 'parser/core/Events';
 import { Options } from 'parser/core/Module';
+import { ThresholdStyle, When } from 'parser/core/ParseResults';
 import Enemies from 'parser/shared/modules/Enemies';
 import DualStatisticBox from 'parser/ui/DualStatisticBox';
 
@@ -13,6 +15,7 @@ import AtonementAnalyzer, {
   AtonementAnalyzerEvent,
 } from '@wowanalyzer/priest-discipline/src/modules/core/AtonementAnalyzer';
 
+import { POWER_WORD_RADIANCE_ATONEMENT_DUR } from '../../constants';
 import AtonementDamageSource from '../features/AtonementDamageSource';
 
 class Schism extends Analyzer {
@@ -29,13 +32,49 @@ class Schism extends Analyzer {
   private directDamage = 0;
   private damageFromBuff = 0;
   private healing = 0;
+  private radianceCast = false;
+  private lastRadianceCast = 0;
+  private badSchism = 0;
 
   constructor(options: Options) {
     super(options);
     this.active = this.selectedCombatant.hasTalent(SPELLS.SCHISM_TALENT.id);
-
+    this.addEventListener(
+      Events.cast.by(SELECTED_PLAYER).spell(SPELLS.POWER_WORD_RADIANCE),
+      this.onRadiance,
+    );
+    this.addEventListener(
+      Events.cast.by(SELECTED_PLAYER).spell(SPELLS.SCHISM_TALENT),
+      this.onSchism,
+    );
     this.addEventListener(Events.damage.by(SELECTED_PLAYER), this.onDamage);
     this.addEventListener(AtonementAnalyzer.atonementEventFilter, this.onAtonement);
+  }
+
+  private onRadiance(event: CastEvent) {
+    this.radianceCast = true;
+    this.lastRadianceCast = event.timestamp;
+  }
+
+  private onSchism(event: CastEvent) {
+    if (
+      !this.radianceCast ||
+      event.timestamp - this.lastRadianceCast >= POWER_WORD_RADIANCE_ATONEMENT_DUR
+    ) {
+      this.badSchism += 1;
+    }
+    this.radianceCast = false;
+  }
+
+  get suggestionThresholds() {
+    return {
+      actual: this.badSchism,
+      isGreaterThan: {
+        average: 0,
+        major: 1,
+      },
+      style: ThresholdStyle.NUMBER,
+    };
   }
 
   private onAtonement(event: AtonementAnalyzerEvent) {
@@ -73,6 +112,25 @@ class Schism extends Analyzer {
     }
 
     this.damageFromBuff += calculateEffectiveDamage(event, Schism.bonus);
+  }
+
+  suggestions(when: When) {
+    when(this.suggestionThresholds).addSuggestion((suggest, actual, recommended) =>
+      suggest(
+        <>
+          {' '}
+          Always pair <SpellLink id={SPELLS.SCHISM_TALENT.id} /> with one or two charges of{' '}
+          <SpellLink id={SPELLS.POWER_WORD_RADIANCE.id} />
+        </>,
+      )
+        .icon(SPELLS.SCHISM_TALENT.icon)
+        .actual(
+          t({
+            message: `${actual} schisms not following a Power Word: Radiance cast`,
+          }),
+        )
+        .recommended(`${recommended} is recommended`),
+    );
   }
 
   statistic() {
